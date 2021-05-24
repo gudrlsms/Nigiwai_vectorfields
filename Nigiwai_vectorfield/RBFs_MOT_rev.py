@@ -4,6 +4,7 @@ import numpy as np
 from scipy.spatial import distance as dist
 from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import spsolve
+from scipy.sparse.linalg import lsqr
 from matplotlib import cm
 
 # Kernel function
@@ -22,6 +23,8 @@ end_fr = start_fr + 1 # end frame
 const = 1 # constant in kernel
 scaling = 0.01 # scaling of position vectors in data
 weight = 1.5 # weight of IQR method
+number_c = 50 # number_c ** 2 = the number of points of centre's of rbf function
+number_k = 20 # the number of points in k-neighbourhood
 grid_number_x = 50 # dense of x-axis grid for plotting interpolated functions
 grid_number_y = 50
 
@@ -58,46 +61,57 @@ ini_xy = ini_vector.loc[:,['Xt_s','Yt_s']].values
 ini_u = ini_vector.loc[:,['U']].values
 ini_v = ini_vector.loc[:,['V']].values
 
-k = 2 # the number of points in k-neighbour
-
-phi_array = np.zeros((len(ini_xy), len(ini_xy)))
-for i in range(len(ini_xy)):
-    col_dist = ((ini_xy[:,0] - ini_xy[i][0]) ** 2 + (ini_xy[:,1] - ini_xy[i][1]) ** 2) ** 0.5
-    ini_dist = np.c_[ini_xy, col_dist]
-    dist_sort_index = ini_dist[:,2].argsort()
-    nei_index = dist_sort_index[0:k]
-    
-    for j in range(len(nei_index)):
-        phi_array[i][nei_index[j]] = phi(const, ini_xy[i][0:2], ini_xy[nei_index[j]][0:2])
-
-weight_x = spsolve(csc_matrix(phi_array), csc_matrix(ini_u))
-weight_y = spsolve(csc_matrix(phi_array), csc_matrix(ini_v))
-#weight_x = weight_x / dist.euclidean(np.zeros(len(weight_x)), weight_x.ravel())
-#weight_y = weight_y / dist.euclidean(np.zeros(len(weight_y)), weight_y.ravel())
-
-print(weight_x.ravel())
-print(np.dot(phi_array,weight_x.ravel()))
-print(ini_u.ravel())
-
-# Calculate interpolation functions
 min_x = min(ini_xy[:,0])
 max_x = max(ini_xy[:,0])
 min_y = min(ini_xy[:,1])
 max_y = max(ini_xy[:,1])
 
+rbf_x, rbf_y = np.meshgrid(np.linspace(min_x, max_x, number_c), np.linspace(min_y, max_y, number_c))
+rbf_c = np.vstack([rbf_x.ravel(), rbf_y.ravel()]).T
+
+phi_array = np.zeros((len(ini_xy), len(rbf_c)))
+for i in range(len(ini_xy)):
+    col_dist = ((rbf_c[:,0] - ini_xy[i][0]) ** 2 + (rbf_c[:,1] - ini_xy[i][1]) ** 2) ** 0.5
+    dist_sort_index = col_dist.argsort()
+    nei_index = dist_sort_index[0:number_k]
+    
+    for j in range(len(nei_index)):
+        phi_array[i][nei_index[j]] = phi(const, ini_xy[i][0:2], rbf_c[nei_index[j]][0:2])
+
+weight_x= lsqr(csc_matrix(phi_array), ini_u)[0]
+weight_y = lsqr(csc_matrix(phi_array), ini_v)[0]
+#weight_x = weight_x / dist.euclidean(np.zeros(len(weight_x)), weight_x.ravel())
+#weight_y = weight_y / dist.euclidean(np.zeros(len(weight_y)), weight_y.ravel())
+
+"""
+phi_array = np.zeros((len(ini_xy), len(ini_xy)))
+for i in range(len(ini_xy)):
+    col_dist = ((ini_xy[:,0] - ini_xy[i][0]) ** 2 + (ini_xy[:,1] - ini_xy[i][1]) ** 2) ** 0.5
+    dist_sort_index = col_dist.argsort()
+    nei_index = dist_sort_index[0:number_k]
+    
+    for j in range(len(nei_index)):
+        phi_array[i][nei_index[j]] = phi(const, ini_xy[i][0:2], ini_xy[nei_index[j]][0:2])
+
+weight_x = spsolve(csc_matrix(phi_array), ini_u)
+weight_y = spsolve(csc_matrix(phi_array), ini_v)
+#weight_x = weight_x / dist.euclidean(np.zeros(len(weight_x)), weight_x.ravel())
+#weight_y = weight_y / dist.euclidean(np.zeros(len(weight_y)), weight_y.ravel())
+"""
+
+# Calculate interpolation functions
 grid_x0 = np.linspace(min_x - (100 * scaling), max_x + (100 * scaling), grid_number_x)
 grid_y0 = np.linspace(min_y - (100 * scaling), max_y + (100 * scaling), grid_number_y)
 
 grid_x, grid_y = np.meshgrid(grid_x0, grid_y0)
 grid_xy = np.vstack([grid_x.ravel(), grid_y.ravel()]).T
 
-intpl_u = []
-intpl_v = []
+intpl_u = np.array([])
+intpl_v = np.array([])
 for xi, yi in zip(grid_xy[:,0], grid_xy[:,1]):
-    intpl_u.append(intpl_func(xi, yi, ini_xy, weight_x, const))
-    intpl_v.append(intpl_func(xi, yi, ini_xy, weight_y, const))
+    intpl_u = np.append(intpl_u, intpl_func(xi, yi, rbf_c, weight_x, const))
+    intpl_v = np.append(intpl_v, intpl_func(xi, yi, rbf_c, weight_y, const))
 
-    
 # Draw figures
 plt.figure(figsize=(6, 6))
 plt.quiver(grid_xy[:,0], grid_xy[:,1], intpl_u, intpl_v)

@@ -83,22 +83,6 @@ weight_y = lsqr(csc_matrix(phi_array), ini_v)[0]
 #weight_x = weight_x / dist.euclidean(np.zeros(len(weight_x)), weight_x.ravel())
 #weight_y = weight_y / dist.euclidean(np.zeros(len(weight_y)), weight_y.ravel())
 
-"""
-phi_array = np.zeros((len(ini_xy), len(ini_xy)))
-for i in range(len(ini_xy)):
-    col_dist = ((ini_xy[:,0] - ini_xy[i][0]) ** 2 + (ini_xy[:,1] - ini_xy[i][1]) ** 2) ** 0.5
-    dist_sort_index = col_dist.argsort()
-    nei_index = dist_sort_index[0:number_k]
-    
-    for j in range(len(nei_index)):
-        phi_array[i][nei_index[j]] = phi(const, ini_xy[i][0:2], ini_xy[nei_index[j]][0:2])
-
-weight_x = spsolve(csc_matrix(phi_array), ini_u)
-weight_y = spsolve(csc_matrix(phi_array), ini_v)
-#weight_x = weight_x / dist.euclidean(np.zeros(len(weight_x)), weight_x.ravel())
-#weight_y = weight_y / dist.euclidean(np.zeros(len(weight_y)), weight_y.ravel())
-"""
-
 # Calculate interpolation functions
 grid_x0 = np.linspace(min_x - (100 * scaling), max_x + (100 * scaling), grid_number_x)
 grid_y0 = np.linspace(min_y - (100 * scaling), max_y + (100 * scaling), grid_number_y)

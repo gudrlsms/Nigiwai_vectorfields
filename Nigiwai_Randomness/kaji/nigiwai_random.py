@@ -1,13 +1,7 @@
-import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.sparse import csc_matrix
-from scipy.sparse.linalg import lsqr
-from matplotlib import cm
-from scipy.integrate import dblquad
 import scipy.stats
 import numpy as np
 from tqdm import tqdm
-import random
 
 # Loading vadere data
 def load_vadere(df, scale, start_frame, end_frame, frame_skip):
@@ -50,30 +44,12 @@ def compute_velocity(X,Y, epsilon):
     return(df_u, df_v)
 
 ## u[ped,frame]
-def compute_R1(u,v):
-    if u.shape[0]==0:
-        return(np.zeros(1))
-    df_norm = np.sqrt(u**2 + v**2)
-    Tu = u/df_norm
-    Tv = v/df_norm
-    return(np.sqrt(np.mean(Tu,axis=1)**2 + np.mean(Tv,axis=1)**2))
-
-def compute_R2(u,v):
-    if u.shape[0]==0:
-        return(np.zeros(1))
-    df_norm = np.sqrt(u**2 + v**2)
-    Tu = u/df_norm
-    Tv = v/df_norm
-    Tu2 = Tu**2 - Tv**2
-    Tv2 = 2*Tu*Tv
-    return(np.sqrt(np.mean(Tu2,axis=1)**2 + np.mean(Tv2,axis=1)**2))
-
 def compute_moment(u,v,p):
     if u.shape[0]==0:
         return(np.zeros(1))
     df_norm = np.sqrt(u**2 + v**2)
     T = ((u/df_norm + v/df_norm * 1j)**p).mean(axis=1)
-    return(np.absolute(T))    
+    return(np.absolute(T))
 
 def entropy_base(u,v):
     if u.shape[0]==0:
@@ -89,4 +65,26 @@ def moving_average(values, alpha=0.8):
     for i in range(len(values)-1):
         indicator_list_ma.append(alpha*values[i+1] + (1-alpha)*indicator_list_ma[i])
     return(indicator_list_ma)
+# not used
+def compute_R1(u,v):
+    if u.shape[0]==0:
+        return(np.zeros(1))
+    df_norm = np.sqrt(u**2 + v**2)
+    Tu = u/df_norm
+    Tv = v/df_norm
+    return(np.sqrt(np.mean(Tu,axis=1)**2 + np.mean(Tv,axis=1)**2))
+
+# not used
+def compute_R2(u,v):
+    if u.shape[0]==0:
+        return(np.zeros(1))
+    df_norm = np.sqrt(u**2 + v**2)
+    Tu = u/df_norm
+    Tv = v/df_norm
+    Tu2 = Tu**2 - Tv**2
+    Tv2 = 2*Tu*Tv
+    return(np.sqrt(np.mean(Tu2,axis=1)**2 + np.mean(Tv2,axis=1)**2))
+
+
+
     

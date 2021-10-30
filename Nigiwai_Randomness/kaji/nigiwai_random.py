@@ -4,19 +4,21 @@ import numpy as np
 from tqdm import tqdm
 
 # Loading vadere data
-def load_vadere(df, scale, start_frame, end_frame, frame_skip):
+def load_vadere(df, start_frame=0, end_frame=None, frame_skip=1):
+    if end_frame is None:
+        end_frame = int(round(df['endTime-PID1'].max()/frame_skip))
     nPed = int(df['pedestrianId'].max())
-    df['pedestrianId'] -= 1 # PID start with 0
+    df['pedestrianId'] -= df['pedestrianId'].min() # PID start with 0
     X = np.full((nPed,end_frame),np.nan)  # (pid,frame),  x == nan means the person is not in the field
     Y = np.full((nPed,end_frame),np.nan)  # (pid,frame)
-    for pid,tid,st,et,sx,ex,sy,ey in tqdm(zip(df['pedestrianId'],df['targetId-PID2'],df['simTime'],df['endTime-PID1'],df['startX-PID1'],df['endX-PID1'],df['startY-PID1'],df['endY-PID1']),total=df.shape[0]):
+    for pid,st,et,sx,ex,sy,ey in tqdm(zip(df['pedestrianId'],df['simTime'],df['endTime-PID1'],df['startX-PID1'],df['endX-PID1'],df['startY-PID1'],df['endY-PID1']),total=df.shape[0]):
         pid = int(pid)
         start_fr = max(int(round(st/frame_skip)),start_frame)
         end_fr = min(int(round(et/frame_skip))+1,end_frame)
         if end_fr-start_fr>0:
             X[pid,start_fr:end_fr] = np.linspace(sx,ex, end_fr-start_fr)
             Y[pid,start_fr:end_fr] = np.linspace(sy,ey, end_fr-start_fr)
-    return(scale*X,scale*Y)
+    return(X,Y)
 
 
 # Adding Gaussian noise
@@ -65,6 +67,7 @@ def moving_average(values, alpha=0.8):
     for i in range(len(values)-1):
         indicator_list_ma.append(alpha*values[i+1] + (1-alpha)*indicator_list_ma[i])
     return(indicator_list_ma)
+
 # not used
 def compute_R1(u,v):
     if u.shape[0]==0:

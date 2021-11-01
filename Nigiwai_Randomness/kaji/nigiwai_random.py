@@ -2,8 +2,9 @@ import matplotlib.pyplot as plt
 import scipy.stats
 import numpy as np
 from tqdm import tqdm
-from numba import njit, prange
 import pandas as pd
+
+#from numba import njit, prange
 
 def load_vadere(fn):
     df = pd.read_csv(fn,header=0,delim_whitespace=True,dtype='f8')
@@ -11,7 +12,7 @@ def load_vadere(fn):
     return(df[['pedestrianId','simTime','endTime-PID1','startX-PID1','endX-PID1','startY-PID1','endY-PID1']].values)
 
 # Loading vadere data
-@njit(parallel=True)
+#@njit(parallel=True)
 def vadere_coords(A, start_frame=0, end_frame=None, frame_skip=1):
     # A['pedestrianId','simTime','endTime-PID1','startX-PID1','endX-PID1','startY-PID1','endY-PID1']
     if end_frame is None:

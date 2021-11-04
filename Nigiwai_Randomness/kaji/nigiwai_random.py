@@ -25,7 +25,7 @@ def vadere_coords(A, start_frame=0, end_frame=None, frame_skip=1):
         pid,st,et,sx,ex,sy,ey = A[i]
         pid = int(pid)
         start_fr = max(int(round(st/frame_skip)),start_frame)
-        end_fr = min(int(round(et/frame_skip))+1,end_frame)
+        end_fr = min(int(round(et/frame_skip))+1,end_frame-1)
         if end_fr-start_fr>0:
             X[pid,start_fr:end_fr] = np.linspace(sx,ex, end_fr-start_fr)
             Y[pid,start_fr:end_fr] = np.linspace(sy,ey, end_fr-start_fr)

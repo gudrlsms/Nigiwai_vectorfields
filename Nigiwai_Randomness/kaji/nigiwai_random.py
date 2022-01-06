@@ -17,7 +17,7 @@ def vadere_coords(A, start_frame=0, end_frame=None, frame_skip=1):
     # A['pedestrianId','simTime','endTime-PID1','startX-PID1','endX-PID1','startY-PID1','endY-PID1']
     if end_frame is None:
         end_frame = int(round(A[:,2].max()/frame_skip))
-    nPed = int(A[:,0].max())
+    nPed = int(A[:,0].max())+1
     X = np.full((nPed,int(end_frame)),np.nan)  # (pid,frame),  x == nan means the person is not in the field
     Y = np.full((nPed,int(end_frame)),np.nan)  # (pid,frame)
     #for pid,st,et,sx,ex,sy,ey in tqdm(zip(df['pedestrianId'],df['simTime'],df['endTime-PID1'],df['startX-PID1'],df['endX-PID1'],df['startY-PID1'],df['endY-PID1']),total=df.shape[0]):
